@@ -168,8 +168,7 @@ SeveSegmentArray[0]=(Ctr%10000000)/1000000;
 #pragma code
 #endif
 
-#pragma interrupt hal_7SegmentISR
-void hal_7SegmentISR (void)
+void interrupt hal_7SegmentISR (void)
 {
 static u8 CurrentDigit=0;
 static u8 NumToDisplay;

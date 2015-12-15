@@ -10,9 +10,11 @@
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
 
-#include <p18cxxx.h>
-#include <i2c.h>
-#include <eep.h>
+#include <xc.h>
+#include <pic18.h>
+#include <pic18f2550.h>
+//#include <i2c.h>
+//#include <eep.h>
 
 typedef unsigned char u8;
 typedef unsigned int u16;
@@ -20,8 +22,6 @@ typedef unsigned long u32;
 
 #define TRUE	1
 #define FALSE	0
-
-#include "lld_Interrupts.h"
 
 #include "hal_EEPROM.h"
 #include "hal_InternalEEPROM.h"

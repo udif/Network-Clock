@@ -59,7 +59,7 @@ u8 hal_7SegDrv_GetDispMode(void);
 void hal_7SegDrv_SetDispMode(u8 DispMode);
 void hal_7SegDrv_ExtractNumToArray(volatile u32 Ctr);
 
-void hal_7SegmentISR (void);
+void interrupt hal_7SegmentISR (void);
 
 
 #endif

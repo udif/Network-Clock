@@ -205,36 +205,33 @@ TRISC=0x04; // switch
 #define REMAPPED_HIGH_INTERRUPT_VECTOR_ADDRESS   0x808
 #define REMAPPED_LOW_INTERRUPT_VECTOR_ADDRESS   0x818
 
+#if 0
 //We didn't use the low priority interrupts,
 // but you could add your own code here
-#pragma interruptlow InterruptHandlerLow
-void InterruptHandlerLow(void){}
+void interrupt low_priority InterruptHandlerLow(void){}
 
 //these statements remap the vector to our function
 //When the interrupt fires the PIC checks here for directions
-#pragma code REMAPPED_HIGH_INTERRUPT_VECTOR = REMAPPED_HIGH_INTERRUPT_VECTOR_ADDRESS
-void Remapped_High_ISR (void){
-     _asm goto hal_7SegmentISR _endasm
+void Remapped_High_ISR (void) @REMAPPED_HIGH_INTERRUPT_VECTOR_ADDRESS {
+     asm("goto hal_7SegmentISR");
 }
 
-#pragma code REMAPPED_LOW_INTERRUPT_VECTOR = REMAPPED_LOW_INTERRUPT_VECTOR_ADDRESS
-void Remapped_Low_ISR (void){
-     _asm goto InterruptHandlerLow _endasm
+void Remapped_Low_ISR (void) @REMAPPED_LOW_INTERRUPT_VECTOR_ADDRESS{
+     asm("goto InterruptHandlerLow");
 }
 
 //relocate the reset vector
 extern void _startup (void); 
-#pragma code REMAPPED_RESET_VECTOR = REMAPPED_RESET_VECTOR_ADDRESS
-void _reset (void){
-    _asm goto _startup _endasm
+void _reset (void) @REMAPPED_RESET_VECTOR_ADDRESS {
+     asm("goto _startup");
 }
 //set the initial vectors so this works without the bootloader too.
-#pragma code HIGH_INTERRUPT_VECTOR = 0x08
-void High_ISR (void){
-     _asm goto REMAPPED_HIGH_INTERRUPT_VECTOR_ADDRESS _endasm
+void High_ISR (void) @0x8{
+     asm("goto REMAPPED_HIGH_INTERRUPT_VECTOR_ADDRESS");
 }
-#pragma code LOW_INTERRUPT_VECTOR = 0x18
-void Low_ISR (void){
-     _asm goto REMAPPED_LOW_INTERRUPT_VECTOR_ADDRESS _endasm
+void Low_ISR (void) @0x18{
+     asm("goto REMAPPED_LOW_INTERRUPT_VECTOR_ADDRESS");
 }
+#endif
+
 ////// EOF ////////
