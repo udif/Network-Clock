@@ -68,125 +68,56 @@ Version:
 void hal_MCU_InitPorts(void);
 ////////////////////////////////////////////
 
+static date_time dt;
+
 u16 dummydelay, bigdelay;
 #define MY_DELAY(x) dummydelay=(x); do{dummydelay--;}while(dummydelay!=0)
 #define MY_BIG_DELAY(x) bigdelay=(x); do{MY_DELAY(0xffff); bigdelay--;}while(bigdelay!=0)
 
 void main(void)
 {
-static volatile u32 EepromCtr;
-static u8 KeyPressedFlag=FALSE;
-static u8 boolErase;
+	static u8 last_sec;
 
-//INIT PIC
-hal_MCU_InitPorts();
+	//INIT PIC
+	hal_MCU_InitPorts();
 
-//INIT I2C
-hal_EEPROM_Init();
+	//INIT 7Segment
+	SevenSegment_InitPort();
 
-//INIT 7Segment
-SevenSegment_InitPort();
+	hal_7SegDrv_SetDispMode(DISP_MODE_FLASH); //display FLASH on start
+	hal_Timer_Init(); //start display timer
+	MY_BIG_DELAY(50); //delay
 
-#define ctr EepromCtr // just to save memory space
+	hal_7SegDrv_SetDispMode(DISP_MODE_DESTROY); //display DISTROY
+	dt.sec = 0;
+	dt.min = 0;
+	dt.hour = 0;
+	dt.day = 1;
+	dt.month = 1;
+	dt.year = 1980;
 
-hal_7SegDrv_SetDispMode(DISP_MODE_FLASH); //display FLASH on start
-hal_Timer_Init(); //start display timer
-MY_BIG_DELAY(50); //delay
-
-boolErase=FALSE;
-hal_7SegDrv_SetDispMode(DISP_MODE_DESTROY); //display DISTROY
-
-for(ctr=0;ctr<50;ctr++) //check for erase button press
-	{
-	if(S1_BUTTON==S1_PRESSED)
-		{
-		boolErase=TRUE;
+	while(1) {
+		//MY_DELAY(0x7fff);
+		if (dt.sec != last_sec) {
+			hal_7SegDrv_ExtractTimeToArray(dt);
 		}
-	MY_BIG_DELAY(1);
-	}
+		last_sec = dt.sec;
 
-if(boolErase==TRUE) //confim erase
-	{
-	hal_7SegDrv_SetDispMode(DISP_MODE_ERASE);
-	MY_BIG_DELAY(50);
-	if(S1_BUTTON==S1_PRESSED)
-		{
-		hal_InternalEEPROM_Erase();
-		hal_7SegDrv_SetDispMode(DISP_MODE_ERASING);
-		MY_BIG_DELAY(50);
+		//Write
+		if (0) {
+			hal_7SegDrv_SetDispMode(DISP_MODE_I2C_ERR);
+			MY_BIG_DELAY(20);
+			continue; //try again on the next loop
 		}
-	}
-
-#undef ctr
-
-// retrieve any previous counter value from EEPROM
-EepromCtr=hal_InternalEEPROM_Read();
-
-hal_7SegDrv_ExtractNumToArray(EepromCtr);
-while(1)
-	{
-	//MY_DELAY(0x7fff);
-
-	//Write
-	if (hal_EEPROM_DestroyWrite()==ERROR_I2C)
-		{
-		hal_7SegDrv_SetDispMode(DISP_MODE_I2C_ERR);
-		MY_BIG_DELAY(20);
-		continue; //try again on the next loop
-		}
-
-	//Read
-	switch(hal_EEPROM_DestroyReadAndVerify())
-		{
-		case TRUE: //success
-			hal_7SegDrv_ExtractNumToArray(EepromCtr);
-			EepromCtr++;
-			break;
-		case FALSE: //verify failed, read error, (try again?)
-			hal_InternalEEPROM_Write(EepromCtr);
-			while(1)
-				{
-				hal_7SegDrv_SetDispMode(DISP_MODE_DEAD);
-				MY_BIG_DELAY(20); // TODO: ADJUST THIS
-				hal_7SegDrv_ExtractNumToArray(EepromCtr);
-				MY_BIG_DELAY(20); // TODO: ADJUST THIS
-				}
-			break;
-		case ERROR_I2C: //I2C bus error, (try again?)
-			hal_InternalEEPROM_Write(EepromCtr);
-			while(1)
-				{
-				hal_7SegDrv_SetDispMode(DISP_MODE_I2C_ERR);
-				MY_BIG_DELAY(20); // TODO: ADJUST THIS
-				hal_7SegDrv_ExtractNumToArray(EepromCtr);
-				MY_BIG_DELAY(20); // TODO: ADJUST THIS
-				}
-			break;
-		}
-
-	if(S1_BUTTON==S1_PRESSED)
-		{
-		// Place other code for Switch Press
-		// TODO Debounce Routine: TBD
-
-		MY_DELAY(0xFFFF); // ADJUST THIS //act as the delay
-		if((S1_BUTTON==S1_PRESSED) && (KeyPressedFlag==FALSE)) // reverify
-			{
-			hal_7SegDrv_SetDispMode(DISP_MODE_SAVE);
-			MY_BIG_DELAY(20); // TODO: ADJUST THIS
-			hal_InternalEEPROM_Write(EepromCtr);
-			hal_7SegDrv_ExtractNumToArray(EepromCtr);
-			}
-		KeyPressedFlag=TRUE;
-		//while(1); // HALT!
-		}
-	else
-		{
-		KeyPressedFlag=FALSE;
+		if(S1_BUTTON==S1_PRESSED) {
 		}
 	}
 }
 
+void increment_curr_date_time(void)
+{
+	increment_date_time(&dt);
+}
 
 void hal_MCU_InitPorts(void)
 {
@@ -201,37 +132,5 @@ TRISB=0x03; // i2c
 TRISC=0x04; // switch
 }
 
-#define REMAPPED_RESET_VECTOR_ADDRESS         0x800
-#define REMAPPED_HIGH_INTERRUPT_VECTOR_ADDRESS   0x808
-#define REMAPPED_LOW_INTERRUPT_VECTOR_ADDRESS   0x818
-
-#if 0
-//We didn't use the low priority interrupts,
-// but you could add your own code here
-void interrupt low_priority InterruptHandlerLow(void){}
-
-//these statements remap the vector to our function
-//When the interrupt fires the PIC checks here for directions
-void Remapped_High_ISR (void) @REMAPPED_HIGH_INTERRUPT_VECTOR_ADDRESS {
-     asm("goto hal_7SegmentISR");
-}
-
-void Remapped_Low_ISR (void) @REMAPPED_LOW_INTERRUPT_VECTOR_ADDRESS{
-     asm("goto InterruptHandlerLow");
-}
-
-//relocate the reset vector
-extern void _startup (void); 
-void _reset (void) @REMAPPED_RESET_VECTOR_ADDRESS {
-     asm("goto _startup");
-}
-//set the initial vectors so this works without the bootloader too.
-void High_ISR (void) @0x8{
-     asm("goto REMAPPED_HIGH_INTERRUPT_VECTOR_ADDRESS");
-}
-void Low_ISR (void) @0x18{
-     asm("goto REMAPPED_LOW_INTERRUPT_VECTOR_ADDRESS");
-}
-#endif
 
 ////// EOF ////////

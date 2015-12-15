@@ -24,6 +24,9 @@
 #define SEVENSEG_H		17
 #define SEVENSEG_Y		4
 #define SEVENSEG_T		20
+#define SEVENSEG_U		21
+#define SEVENSEG_N		22
+#define SEVENSEG_K		23
 
 
 
@@ -50,14 +53,18 @@ enum SEVEN_SEG_DISP_MODE
 
 #define SevenSegment_DispOneDigit(Number)  PORT_7SEG_A_B&=~0x03; \
 	PORT_7SEG_C_D_E_F_G=0; \
-	PORT_7SEG_A_B|=SEVENSEGMENTARRAY[(Number)][0]; \
-	PORT_7SEG_C_D_E_F_G=SEVENSEGMENTARRAY[(Number)][1]
+	PORT_7SEG_A_B|=(SEVENSEGMENTARRAY[(Number)]>>5); \
+	PORT_7SEG_C_D_E_F_G=(SEVENSEGMENTARRAY[(Number)]&0x1f)
 
 void ExtractEEPROMCtrToArray(void);
 
 u8 hal_7SegDrv_GetDispMode(void);
 void hal_7SegDrv_SetDispMode(u8 DispMode);
-void hal_7SegDrv_ExtractNumToArray(volatile u32 Ctr);
+//void hal_7SegDrv_ExtractNumToArray(volatile u32 Ctr);
+void hal_7SegDrv_ExtractTimeToArray(date_time dt);
+void hal_7SegDrv_ExtractDateToArray(date_time dt);
+void increment_date_time(date_time *dt);
+void increment_curr_date_time(void);
 
 void interrupt hal_7SegmentISR (void);
 

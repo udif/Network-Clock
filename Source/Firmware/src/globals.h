@@ -20,6 +20,16 @@ typedef unsigned char u8;
 typedef unsigned int u16;
 typedef unsigned long u32;
 
+typedef struct {
+	u16 year;
+	u8 month;
+	u8 day;
+	u8 hour;
+	u8 min;
+	u8 sec;
+} date_time;
+
+
 #define TRUE	1
 #define FALSE	0
 
