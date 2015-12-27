@@ -95,28 +95,17 @@ void main(void)
 	dt.day = 1;
 	dt.month = 1;
 	dt.year = 1980;
+	shadow_b = 0;
 
 	while(1) {
 		//MY_DELAY(0x7fff);
-		if (dt.sec != last_sec) {
+		if (sec != last_sec) {
+			shadow_b = sec&1;
+			increment_date_time(&dt);
 			hal_7SegDrv_ExtractTimeToArray(dt);
-		}
-		last_sec = dt.sec;
-
-		//Write
-		if (0) {
-			hal_7SegDrv_SetDispMode(DISP_MODE_I2C_ERR);
-			MY_BIG_DELAY(20);
-			continue; //try again on the next loop
-		}
-		if(S1_BUTTON==S1_PRESSED) {
+			last_sec = sec;
 		}
 	}
-}
-
-void increment_curr_date_time(void)
-{
-	increment_date_time(&dt);
 }
 
 void hal_MCU_InitPorts(void)
@@ -128,7 +117,7 @@ LATA=0;
 LATB=0;
 LATC=0;
 TRISA=0;
-TRISB=0x03; // i2c
+TRISB=0x02; // i2c
 TRISC=0x04; // switch
 }
 

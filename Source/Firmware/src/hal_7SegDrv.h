@@ -58,6 +58,9 @@ enum SEVEN_SEG_DISP_MODE
 
 void ExtractEEPROMCtrToArray(void);
 
+extern u8 sec;
+extern u8 shadow_b;
+
 u8 hal_7SegDrv_GetDispMode(void);
 void hal_7SegDrv_SetDispMode(u8 DispMode);
 //void hal_7SegDrv_ExtractNumToArray(volatile u32 Ctr);

@@ -237,7 +237,9 @@ void increment_date_time(date_time *dt)
 }
 
 ////////////////////////// INTERRUPT ROUTINE //////////////////////
-
+static u16 time_cnt, last_time_cnt, time_mod = ((1<<14)/50);
+u8 sec;
+u8 shadow_b;
 
 void interrupt hal_7SegmentISR (void)
 {
@@ -249,7 +251,7 @@ if(INTCONbits.TMR0IF)
 	{
 	//Cathode off
 	LATCbits.LATC7=0;
-	LATB=0;
+	LATB = shadow_b;
 
 	SevenSegment_DispOneDigit(SeveSegmentArray[CurrentDigit]);
 	
@@ -260,16 +262,19 @@ if(INTCONbits.TMR0IF)
 	//Select Cathode
 	if (CurrentDigit==6) {
 		LATCbits.LATC7=1;
-		LATB=0;
+		LATB = shadow_b;
 	} else {
 		LATCbits.LATC7=0;
-		LATB=1<<(7-CurrentDigit);
+		LATB=1<<(7-CurrentDigit) | shadow_b;
 	}
 
 	CurrentDigit++;
 	if (CurrentDigit==MAX_DIGIT) { // up to 6 only (0 to 6 is 7digits)
 		CurrentDigit=0;
-		increment_curr_date_time();
+		last_time_cnt = time_cnt;
+		time_cnt += time_mod;
+		if (time_cnt < last_time_cnt)
+			sec++;
 	}
 
 	INTCONbits.TMR0IF=0;
