@@ -36,8 +36,16 @@ Additional ESP8266 code will be added here. It will be written using the ESP8266
 Date and time will be downloaded via one of the following resources:  
 http://www.worldweatheronline.com/api/docs/time-zone-api.aspx  
 http://www.ipinfodb.com/ip_location_api_json.php  
-https://freegeoip.net/  
+https://freegeoip.net/  - no API key needed, TZ string returned, not UTC offset
+http://timezonedb.com/api - require API Key, returns local time
+http://www.tzdata.org/api
+
 These have one advantage over plain NTP - They do GeoIP location to determine the timezone.
 By using one of these services, the clock will work anywhere in the world.  
 Once the correct date and time are calculated, it will be sent via the UART to the PIC for display.
 The ESP8266 will update the PIC periodically (update frequency to be determined)
+
+Use:
+http://ip-api.com/json
+Get field from "timezone:"
+Paste into http://www.tzdata.org/lookup?tzid=
