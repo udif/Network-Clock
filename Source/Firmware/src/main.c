@@ -117,7 +117,7 @@ LATA=0;
 LATB=0;
 LATC=0;
 TRISA=0;
-TRISB=0x02; // i2c
+TRISB=0x00;
 TRISC=0x04; // switch
 }
 

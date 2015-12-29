@@ -260,13 +260,8 @@ if(INTCONbits.TMR0IF)
 	}
 
 	//Select Cathode
-	if (CurrentDigit==6) {
-		LATCbits.LATC7=1;
-		LATB = shadow_b;
-	} else {
-		LATCbits.LATC7=0;
-		LATB=1<<(7-CurrentDigit) | shadow_b;
-	}
+	LATCbits.LATC7=0;
+	LATB=1<<(7-CurrentDigit) | shadow_b;
 
 	CurrentDigit++;
 	if (CurrentDigit==MAX_DIGIT) { // up to 6 only (0 to 6 is 7digits)
