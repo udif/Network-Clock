@@ -99,7 +99,9 @@ void main(void)
 
 	while(1) {
 		//MY_DELAY(0x7fff);
+		if (PIR1 & 0x20) dt.sec = RCREG & 0x1f; // demo code for serial input
 		if (sec != last_sec) {
+			TXREG = (sec & 7) + '0'; // demo code for serial output
 			shadow_b = sec&1;
 			increment_date_time(&dt);
 			hal_7SegDrv_ExtractTimeToArray(dt);
@@ -107,6 +109,11 @@ void main(void)
 		}
 	}
 }
+
+// Fosc is taken from the USB PLL output (96MHz) divided by 2
+#define FOSC 48000000L
+#define BAUD_RATE 115200
+#define BRG ((FOSC/BAUD_RATE/4)-1)
 
 void hal_MCU_InitPorts(void)
 {
@@ -119,6 +126,14 @@ LATC=0;
 TRISA=0;
 TRISB=0x00;
 TRISC=0x04; // switch
+
+BAUDCON = 0x08; // BRG16
+TXSTA = 0x24; // TXEN=1,SYNC=0, BRGH=1
+RCSTA = 0x90; // SPEN=1, CREN=1
+
+SPBRG  = BRG &  0xff;
+SPBRGH = BRG >> 8;
+
 }
 
 
