@@ -36,6 +36,7 @@ typedef struct {
 #include "hal_EEPROM.h"
 #include "hal_InternalEEPROM.h"
 #include "hal_Timer.h"
+#include "hal_Eusart.h"
 #include "hal_7SegDrv.h"
 
 #endif /* GLOBALS_H_ */

@@ -12,9 +12,9 @@
 #if 1
 void hal_Timer_Init(void)
 {
-RCON=0;
+RCON=0; // IPEN=0
 INTCON2=0xFF;
-INTCON=0xA0;
+INTCON=0xe0;
 T0CON=HAL_TIMER_T0CON_VAL;
 }
 #endif

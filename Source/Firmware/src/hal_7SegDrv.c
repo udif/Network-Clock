@@ -274,6 +274,18 @@ if(INTCONbits.TMR0IF)
 
 	INTCONbits.TMR0IF=0;
 	}
+	// EUSART receive interrupt
+	if (PIR1bits.RCIF) {
+		if (((rx_wr_ptr + 1) & 0xff) != rx_rd_ptr)
+			rx_buf[rx_wr_ptr++] = RCREG;
+	}
+	// EUSART transmit interrupt
+	if (PIR1bits.TXIF) {
+		if (tx_wr_ptr != tx_rd_ptr)
+			TXREG = tx_buf[tx_rd_ptr++];
+		else
+			PIE1bits.TXIE=0;
+	}
 }
 
 

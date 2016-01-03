@@ -84,6 +84,8 @@ void main(void)
 	//INIT 7Segment
 	SevenSegment_InitPort();
 
+	eusart_init();
+	
 	hal_7SegDrv_SetDispMode(DISP_MODE_FLASH); //display FLASH on start
 	hal_Timer_Init(); //start display timer
 	MY_BIG_DELAY(50); //delay
@@ -99,9 +101,13 @@ void main(void)
 
 	while(1) {
 		//MY_DELAY(0x7fff);
-		if (PIR1 & 0x20) dt.sec = RCREG & 0x1f; // demo code for serial input
+		if (is_rx_ready()) eusart_tx(eusart_rx()); // demo code for serial input
 		if (sec != last_sec) {
-			TXREG = (sec & 7) + '0'; // demo code for serial output
+			eusart_tx((tx_wr_ptr & 7) + '0'); // demo code for serial output
+			eusart_tx((tx_rd_ptr & 7) + '0'); // demo code for serial output
+			eusart_tx((rx_wr_ptr & 7) + '0'); // demo code for serial output
+			eusart_tx((rx_rd_ptr & 7) + '0'); // demo code for serial output
+			eusart_tx('\n');
 			shadow_b = sec&1;
 			increment_date_time(&dt);
 			hal_7SegDrv_ExtractTimeToArray(dt);
@@ -130,6 +136,11 @@ TRISC=0x04; // switch
 BAUDCON = 0x08; // BRG16
 TXSTA = 0x24; // TXEN=1,SYNC=0, BRGH=1
 RCSTA = 0x90; // SPEN=1, CREN=1
+PIE1 = 0x20; // RCIE, TXIE
+PIE2 = 0;
+
+//PIE1bits.RCIE=1;
+//PIE1bits.TXIE=1;
 
 SPBRG  = BRG &  0xff;
 SPBRGH = BRG >> 8;
