@@ -247,32 +247,31 @@ static u8 CurrentDigit=0;
 #define MAX_DIGIT 7
 static u8 NumToDisplay;
 
-if(INTCONbits.TMR0IF)
-	{
-	//Cathode off
-	LATCbits.LATC7=0;
-	LATB = shadow_b;
+	if(INTCONbits.TMR0IF) {
+		//Cathode off
+		LATCbits.LATC7=0;
+		LATB = shadow_b;
 
-	SevenSegment_DispOneDigit(SeveSegmentArray[CurrentDigit]);
-	
-	if(decimalPoint & (1 << CurrentDigit)){
-		PORT_7SEG_DP|=0b00100000;//enable the DP as required
-	}
+		SevenSegment_DispOneDigit(SeveSegmentArray[CurrentDigit]);
+		
+		if(decimalPoint & (1 << CurrentDigit)){
+			PORT_7SEG_DP|=0b00100000;//enable the DP as required
+		}
 
-	//Select Cathode
-	LATCbits.LATC7=0;
-	LATB=1<<(7-CurrentDigit) | shadow_b;
+		//Select Cathode
+		LATCbits.LATC7=0;
+		LATB=1<<(7-CurrentDigit) | shadow_b;
 
-	CurrentDigit++;
-	if (CurrentDigit==MAX_DIGIT) { // up to 6 only (0 to 6 is 7digits)
-		CurrentDigit=0;
-		last_time_cnt = time_cnt;
-		time_cnt += time_mod;
-		if (time_cnt < last_time_cnt)
-			sec++;
-	}
+		CurrentDigit++;
+		if (CurrentDigit==MAX_DIGIT) { // up to 6 only (0 to 6 is 7digits)
+			CurrentDigit=0;
+			last_time_cnt = time_cnt;
+			time_cnt += time_mod;
+			if (time_cnt < last_time_cnt)
+				sec++;
+		}
 
-	INTCONbits.TMR0IF=0;
+		INTCONbits.TMR0IF=0;
 	}
 	// EUSART receive interrupt
 	if (PIR1bits.RCIF) {
