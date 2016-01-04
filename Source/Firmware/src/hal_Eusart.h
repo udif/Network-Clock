@@ -18,4 +18,5 @@ void eusart_init(void);
 u8 is_rx_ready(void);
 u8 is_tx_ready(void);
 void eusart_tx(u8 c);
+void eusart_puts(const char *s);
 u8 eusart_rx(void);

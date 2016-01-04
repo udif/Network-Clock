@@ -55,8 +55,19 @@ void eusart_tx(u8 c)
 {
 	while (((tx_wr_ptr + 1) & 0xff) == tx_rd_ptr);
 	tx_buf[tx_wr_ptr++] = c;
+	PIE1bits.TXIE=1;
 }
 
+//
+//
+//:wcstombs
+void eusart_puts(const char *s)
+{
+	char c;
+	
+	while (c = *s++)
+		eusart_tx(c);
+}
 //
 // Read 1 character from EUSART Rx buffer
 // no need for interrupt disable, because only rx_wr_ptr can change in the middle.
