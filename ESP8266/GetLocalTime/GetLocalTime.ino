@@ -381,9 +381,9 @@ void display_time(void)
 {
   // wait for WiFi connection
   if (web->ready()) {
-    USE_SERIAL.print("Web time: ");
+    USE_SERIAL.print("T");
     USE_SERIAL.println(web->get_time());
-    USE_SERIAL.println(ntp->get_time());
+    //USE_SERIAL.println(ntp->get_time());
   }
 }
 
@@ -391,7 +391,7 @@ void display_time(void)
 void setup ()
 {
   web = new web_time;
-  ntp = new ntp_time;
+  //ntp = new ntp_time;
 }
 
 void loop() {

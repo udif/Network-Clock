@@ -15,7 +15,10 @@ Version:
 
 
 ////////////// CONFIG FUSES ///////////////////
+// 20 MHz input divided by 5 yields the required 4MHz which is a must
+// USB PLL must have 4MHz on input
 #pragma config PLLDIV = 5
+// USB PLL output (96MHz) divided by 2
 #pragma config CPUDIV = OSC1_PLL2
 #pragma config USBDIV = 2
 #pragma config FOSC = HSPLL_HS
@@ -69,14 +72,44 @@ void hal_MCU_InitPorts(void);
 ////////////////////////////////////////////
 
 static date_time dt;
+unsigned char cmd_buf[250];
+u8 cmd_ptr;
 
 u16 dummydelay, bigdelay;
 #define MY_DELAY(x) dummydelay=(x); do{dummydelay--;}while(dummydelay!=0)
 #define MY_BIG_DELAY(x) bigdelay=(x); do{MY_DELAY(0xffff); bigdelay--;}while(bigdelay!=0)
 
+//
+// Read a single N digits number from cmd_buf
+//
+int getnum(int digits)
+{
+	int sum = 0;
+	
+	while (--digits >= 0) {
+		sum = 10 * sum + cmd_buf[cmd_ptr++] - '0';
+	}
+	return sum;
+}
+
+//
+//
+//
+void process_date_time(void)
+{
+	dt.year = getnum(4);
+	dt.month = getnum(2);
+	dt.day = getnum(2);
+	cmd_ptr++;
+	dt.hour = getnum(2);
+	dt.min = getnum(2);
+	dt.sec = getnum(2);
+}
+
 void main(void)
 {
 	static u8 last_sec;
+	char c;
 
 	//INIT PIC
 	hal_MCU_InitPorts();
@@ -98,21 +131,40 @@ void main(void)
 	dt.month = 1;
 	dt.year = 1980;
 	shadow_b = 0;
-
-	while(1) {
-		//MY_DELAY(0x7fff);
-		if (is_rx_ready()) eusart_tx(eusart_rx()); // demo code for serial input
+	cmd_ptr = 0;
+	eusart_puts("Starting...\n");
+	while (1) {
+		// Refresh screen
 		if (sec != last_sec) {
-			eusart_tx((tx_wr_ptr & 7) + '0'); // demo code for serial output
-			eusart_tx((tx_rd_ptr & 7) + '0'); // demo code for serial output
-			eusart_tx((rx_wr_ptr & 7) + '0'); // demo code for serial output
-			eusart_tx((rx_rd_ptr & 7) + '0'); // demo code for serial output
-			eusart_tx('\n');
 			shadow_b = sec&1;
 			increment_date_time(&dt);
 			hal_7SegDrv_ExtractTimeToArray(dt);
 			last_sec = sec;
+			//dt.hour = '0';
 		}
+		// Synchronize time over UART Rx link
+		if (!is_rx_ready())
+			continue; // no new character
+		c = eusart_rx();
+		eusart_tx(c);
+		if (cmd_ptr >= (sizeof(cmd_buf) - 1))
+			continue; // Protect against buffer overflow
+		if ((c == '-') || (c == ' ') || (c == ':'))
+			continue; // skip formatting chars
+		cmd_buf[cmd_ptr++] = c;
+		cmd_buf[cmd_ptr] = 0;
+		if ((c != '\n') && (c != '\r')) // dont do anything until end of line
+			continue;
+		eusart_puts(cmd_buf);
+		cmd_ptr = 1;
+		switch (cmd_buf[0]) {
+			case '#':
+				continue; // skip comments
+			case 'T':
+			eusart_puts("Lets get the time...\n");
+				process_date_time();
+		}
+		cmd_ptr = 0;
 	}
 }
 
@@ -133,7 +185,7 @@ TRISA=0;
 TRISB=0x00;
 TRISC=0x04; // switch
 
-BAUDCON = 0x08; // BRG16
+BAUDCON = 0x38; // 0x38 RXDTP=1,TXCKP=1, BRG16=1
 TXSTA = 0x24; // TXEN=1,SYNC=0, BRGH=1
 RCSTA = 0x90; // SPEN=1, CREN=1
 PIE1 = 0x20; // RCIE, TXIE
