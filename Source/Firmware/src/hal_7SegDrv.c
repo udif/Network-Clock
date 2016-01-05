@@ -25,8 +25,11 @@ static volatile u8 decimalPoint=0; //variable to note which block should have a 
 // Can use this:
 // http://torinak.com/7segment
 
-static const char SEVENSEGMENTARRAY[]=
-	{ // A B C D E F G
+//
+// ASCII to 7-Seg, starting at '0' (ASCII 0x30)
+// Bits 6:0 contains the segment data:  A B C D E F G
+//
+static const u8 s_seg_digit_table[]= {
 		0x6F, // 0
 		0x21, // 1
 		0x76, // 2
@@ -37,131 +40,106 @@ static const char SEVENSEGMENTARRAY[]=
 		0x61, // 7
 		0x7F, // 8
 		0x7B, // 9
-		0x00, // 10 blank
-		0x4E, // 11 C
-		0x5E, // 12 E
-		0x7D, // 13 A
-		0x2F, // 14 V
-		0x5C, // 15 F
-		0x0E, // 16 L
-		0x3D, // 17 H
-		0x37, // 18 d
-		0x14, // 19 r
-		0x33, // 20 t
-		0x3f, // 21 U
-		0x15, // 22 n
-		0x3e, // 23 K
-	};
+		0x00,
+		0x00,
+		0x00,
+		0x00,
+		0x00,
+		0x00,
+		0x00,
+		0x7D, // A
+		0x00,
+		0x4E, // C
+		0x37, // d
+		0x5E, // E
+		0x5C, // F
+		0x00,
+		0x3D, // H
+		0x04, // i
+		0x00,
+		0x3e, // K
+		0x0E, // L
+		0x00,
+		0x15, // n
+		0x00,
+		0x00,
+		0x00,
+		0x14, // r
+		0x00,
+		0x33, // t
+		0x2f, // U
+		0x2F, // V
+// ... to be continued ...
+// ... this is just junk to be filled ...
+// ... It's not in the correct position yet ...
+};
 
+static u8 s_seg_buf[7];
 
-
-#if 0
-u8 hal_7SegDrv_GetDispMode(void)
+void hal_7SegDrv_SetDispMode(const u8 *const dm, date_time dt)
 {
-return SevenSegDispMode;
-}
-#endif
+	u8 digit; // overloaded 3 times ... As dm[i], as 0-9 digit value, and as 7-Seg raw value
+	
+	for (u8 i=0; i < sizeof(s_seg_buf); i++) {
+		digit = dm[i];
+		if (digit & 0x80) {
+			switch (digit) {
+				case SSEG_L_SEC:
+					digit = dt.sec % 10;
+					break;
 
+				case SSEG_H_SEC:
+					digit = dt.sec / 10;
+					break;
 
-void hal_7SegDrv_SetDispMode(u8 DispMode)
-{
-decimalPoint=0; //clear any decimal point
+				case SSEG_L_MIN:
+					digit = dt.min % 10;
+					break;
 
-switch(DispMode)
-	{
-	case DISP_MODE_I2C_ERR:
-		SeveSegmentArray[6]=SEVENSEG_R;
-		SeveSegmentArray[5]=SEVENSEG_R;
-		SeveSegmentArray[4]=SEVENSEG_E;
-		SeveSegmentArray[3]=SEVENSEG_BLANK;
-		SeveSegmentArray[2]=SEVENSEG_C;
-		SeveSegmentArray[1]=2;
-		SeveSegmentArray[0]=SEVENSEG_I;
-		break;
-	case DISP_MODE_SAVE:
-		SeveSegmentArray[6]=SEVENSEG_E;
-		SeveSegmentArray[5]=SEVENSEG_V;
-		SeveSegmentArray[4]=SEVENSEG_A;
-		SeveSegmentArray[3]=SEVENSEG_S;
-		SeveSegmentArray[2]=SEVENSEG_BLANK;
-		SeveSegmentArray[1]=SEVENSEG_BLANK;
-		SeveSegmentArray[0]=SEVENSEG_BLANK;
-		break;
-	case DISP_MODE_DEAD:
-		SeveSegmentArray[6]=SEVENSEG_D;
-		SeveSegmentArray[5]=SEVENSEG_A;
-		SeveSegmentArray[4]=SEVENSEG_E;
-		SeveSegmentArray[3]=SEVENSEG_D;
-		SeveSegmentArray[2]=SEVENSEG_BLANK;
-		SeveSegmentArray[1]=SEVENSEG_BLANK;
-		SeveSegmentArray[0]=SEVENSEG_BLANK;
-		break;
-	case DISP_MODE_FLASH:
-		SeveSegmentArray[6]=SEVENSEG_K;
-		SeveSegmentArray[5]=SEVENSEG_N;
-		SeveSegmentArray[4]=SEVENSEG_I;
-		SeveSegmentArray[3]=SEVENSEG_F;
-		SeveSegmentArray[2]=SEVENSEG_I;
-		SeveSegmentArray[1]=SEVENSEG_D;
-		SeveSegmentArray[0]=SEVENSEG_U;
-		break;
+				case SSEG_H_MIN:
+					digit = dt.min / 10;
+					break;
+				case SSEG_L_HOUR:
+					digit = dt.hour % 10;
+					break;
 
-	case DISP_MODE_DESTROY:
-		SeveSegmentArray[6]=SEVENSEG_Y;
-		SeveSegmentArray[5]=0;
-		SeveSegmentArray[4]=SEVENSEG_R;
-		SeveSegmentArray[3]=SEVENSEG_T;
-		SeveSegmentArray[2]=SEVENSEG_S;
-		SeveSegmentArray[1]=SEVENSEG_E;
-		SeveSegmentArray[0]=SEVENSEG_D;
-		break;
-	case DISP_MODE_ERASING:
-		SeveSegmentArray[6]=SEVENSEG_D;
-		SeveSegmentArray[5]=SEVENSEG_E;
-		SeveSegmentArray[4]=SEVENSEG_S;
-		SeveSegmentArray[3]=SEVENSEG_A;
-		SeveSegmentArray[2]=SEVENSEG_R;
-		SeveSegmentArray[1]=SEVENSEG_E;
-		SeveSegmentArray[0]=SEVENSEG_BLANK;
-		break;
-	case DISP_MODE_ERASE:
-		//SeveSegmentArray[6]=SEVENSEG_D;
-		SeveSegmentArray[6]=SEVENSEG_E;
-		SeveSegmentArray[5]=SEVENSEG_S;
-		SeveSegmentArray[4]=SEVENSEG_A;
-		SeveSegmentArray[3]=SEVENSEG_R;
-		SeveSegmentArray[2]=SEVENSEG_E;
-		SeveSegmentArray[1]=SEVENSEG_BLANK;
-		SeveSegmentArray[0]=SEVENSEG_BLANK;
-		break;
+				case SSEG_H_HOUR:
+					digit = dt.hour / 10;
+					break;
+
+				case SSEG_L_DAY:
+					digit = dt.day % 10;
+					break;
+
+				case SSEG_H_DAY:
+					digit = dt.day / 10;
+					break;
+
+				case SSEG_L_MON:
+					digit = dt.month % 10;
+					break;
+
+				case SSEG_H_MON:
+					digit = dt.month / 10;
+					break;
+
+				case SSEG_0_YEAR:
+					digit = dt.year % 10;
+					break;
+
+				case SSEG_1_YEAR:
+					digit = (dt.year % 100) / 10;;
+					break;
+					
+				default:
+					digit = (digit & 0x7f) - '0';
+
+			}
+			digit = s_seg_digit_table[digit];
+		}
+		s_seg_buf[i] = digit;
 	}
-}
-
-
-void hal_7SegDrv_ExtractTimeToArray(date_time dt)
-{
-	decimalPoint=0x14; // Two dots to separate HH.MM.SS
-
-	SeveSegmentArray[6]= dt.sec % 10;
-	SeveSegmentArray[5]= dt.sec / 10;
-	SeveSegmentArray[4]= dt.min % 10;
-	SeveSegmentArray[3]= dt.min / 10;
-	SeveSegmentArray[2]= dt.hour % 10;
-	SeveSegmentArray[1]= dt.hour / 10;
-	SeveSegmentArray[0]= SEVENSEG_BLANK;
-}
-
-void hal_7SegDrv_ExtractDateToArray(date_time dt)
-{
-	decimalPoint=0x0; // No dots
-
-	SeveSegmentArray[6]= dt.year % 10;
-	SeveSegmentArray[5]= (dt.year % 100) / 10;
-	SeveSegmentArray[4]= dt.month % 10;
-	SeveSegmentArray[3]= dt.month / 10;
-	SeveSegmentArray[2]= SEVENSEG_BLANK;
-	SeveSegmentArray[1]= dt.day % 10;
-	SeveSegmentArray[0]= (dt.day / 10) ? (dt.day / 10) : SEVENSEG_BLANK;
+	decimalPoint=dm[sizeof(s_seg_buf)]; // 1 after the 7-Seg buffer size
 }
 
 #if 0
@@ -192,6 +170,7 @@ SeveSegmentArray[0]=(Ctr%10000000)/1000000;
 
 }
 #endif
+
 static const u8 mdays[] = {
 	0, // dummy
 	31, // Jan
@@ -245,14 +224,15 @@ void interrupt hal_7SegmentISR (void)
 {
 static u8 CurrentDigit=0;
 #define MAX_DIGIT 7
-static u8 NumToDisplay;
+	u8 s_seg_val;
 
 	if(INTCONbits.TMR0IF) {
 		//Cathode off
 		LATCbits.LATC7=0;
 		LATB = shadow_b;
 
-		SevenSegment_DispOneDigit(SeveSegmentArray[CurrentDigit]);
+		s_seg_val = s_seg_buf[CurrentDigit];
+		SevenSegment_DispOneDigit(s_seg_val);
 		
 		if(decimalPoint & (1 << CurrentDigit)){
 			PORT_7SEG_DP|=0b00100000;//enable the DP as required

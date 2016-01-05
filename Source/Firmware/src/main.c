@@ -106,6 +106,46 @@ void process_date_time(void)
 	dt.sec = getnum(2);
 }
 
+//
+// Display modes
+// Each constant represents one digit.
+// If bit 7 (MSB) is set, then this digit contains a dynamic value
+// If bit 7 (MSB) is cleared, the lower 6:0 bits contains 7-Seg data
+// Last entry contains the value of all the dots in each 7-Seg
+//
+const u8 dm_hh_mm[] = {
+	SSEG_BLANK,
+	SSEG_H_HOUR,
+	SSEG_L_HOUR,
+	SSEG_H_MIN,
+	SSEG_L_MIN,
+	SSEG_BLANK,
+	SSEG_BLANK,
+	0x10 // One dot separating HH.MM
+};
+
+const u8 dm_hh_mm_ss[] = {
+	SSEG_BLANK,
+	SSEG_H_HOUR,
+	SSEG_L_HOUR,
+	SSEG_H_MIN,
+	SSEG_L_MIN,
+	SSEG_H_SEC,
+	SSEG_L_SEC,
+	0x14 // Two dots to separate HH.MM.SS
+};
+
+const u8 dm_udifink[] = {
+	0x80 + 'U',
+	0x80 + 'D',
+	0x80 + 'I',
+	0x80 + 'F',
+	SSEG_BLANK,
+	SSEG_BLANK,
+	SSEG_BLANK,
+	0x00
+};
+
 void main(void)
 {
 	static u8 last_sec;
@@ -119,11 +159,10 @@ void main(void)
 
 	eusart_init();
 	
-	hal_7SegDrv_SetDispMode(DISP_MODE_FLASH); //display FLASH on start
+	hal_7SegDrv_SetDispMode(&dm_udifink, dt); //display FLASH on start
 	hal_Timer_Init(); //start display timer
 	MY_BIG_DELAY(50); //delay
 
-	hal_7SegDrv_SetDispMode(DISP_MODE_DESTROY); //display DISTROY
 	dt.sec = 0;
 	dt.min = 0;
 	dt.hour = 0;
@@ -138,7 +177,7 @@ void main(void)
 		if (sec != last_sec) {
 			shadow_b = sec&1;
 			increment_date_time(&dt);
-			hal_7SegDrv_ExtractTimeToArray(dt);
+			hal_7SegDrv_SetDispMode(&dm_hh_mm_ss, dt);
 			last_sec = sec;
 			//dt.hour = '0';
 		}

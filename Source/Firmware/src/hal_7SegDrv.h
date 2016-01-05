@@ -9,38 +9,20 @@
 #ifndef HAL_7SEGDRV_H
 #define HAL_7SEGDRV_H
 
+#define SSEG_BLANK  0x00
 
-#define SEVENSEG_BLANK 	10
-#define SEVENSEG_I		1
-#define SEVENSEG_C		11
-#define SEVENSEG_E		12
-#define SEVENSEG_R		19
-#define SEVENSEG_S		5
-#define SEVENSEG_A		13
-#define SEVENSEG_V		14
-#define SEVENSEG_D		18
-#define SEVENSEG_F		15
-#define SEVENSEG_L		16
-#define SEVENSEG_H		17
-#define SEVENSEG_Y		4
-#define SEVENSEG_T		20
-#define SEVENSEG_U		21
-#define SEVENSEG_N		22
-#define SEVENSEG_K		23
-
-
-
-enum SEVEN_SEG_DISP_MODE
-	{
-//	DISP_MODE_NUM=0x00,
-	DISP_MODE_I2C_ERR,
-	DISP_MODE_SAVE,
-	DISP_MODE_DEAD,
-	DISP_MODE_FLASH,
-	DISP_MODE_DESTROY,
-	DISP_MODE_ERASING,
-	DISP_MODE_ERASE
-	};
+#define SSEG_L_SEC  0xe0
+#define SSEG_H_SEC  0xe1
+#define SSEG_L_MIN  0xe2
+#define SSEG_H_MIN  0xe3
+#define SSEG_L_HOUR 0xe4
+#define SSEG_H_HOUR 0xe5
+#define SSEG_L_DAY  0xe6
+#define SSEG_H_DAY  0xe7
+#define SSEG_L_MON  0xe8
+#define SSEG_H_MON  0xe9
+#define SSEG_0_YEAR 0xea
+#define SSEG_1_YEAR 0xeb
 
 
 // definition
@@ -51,18 +33,16 @@ enum SEVEN_SEG_DISP_MODE
 #define PORT_7SEG_C_D_E_F_G			LATA
 #define PORT_7SEG_DP				LATA
 
-#define SevenSegment_DispOneDigit(Number)  PORT_7SEG_A_B&=~0x03; \
+#define SevenSegment_DispOneDigit(segments)\
+	PORT_7SEG_A_B&=~0x03; \
 	PORT_7SEG_C_D_E_F_G=0; \
-	PORT_7SEG_A_B|=(SEVENSEGMENTARRAY[(Number)]>>5); \
-	PORT_7SEG_C_D_E_F_G=(SEVENSEGMENTARRAY[(Number)]&0x1f)
-
-void ExtractEEPROMCtrToArray(void);
+	PORT_7SEG_A_B|=((segments)>>5); \
+	PORT_7SEG_C_D_E_F_G=((segments)&0x1f)
 
 extern u8 sec;
 extern u8 shadow_b;
 
-u8 hal_7SegDrv_GetDispMode(void);
-void hal_7SegDrv_SetDispMode(u8 DispMode);
+void hal_7SegDrv_SetDispMode(const u8 *const dm, date_time dt);
 //void hal_7SegDrv_ExtractNumToArray(volatile u32 Ctr);
 void hal_7SegDrv_ExtractTimeToArray(date_time dt);
 void hal_7SegDrv_ExtractDateToArray(date_time dt);
