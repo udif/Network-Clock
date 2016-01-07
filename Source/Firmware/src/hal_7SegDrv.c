@@ -139,7 +139,7 @@ void hal_7SegDrv_SetDispMode(const u8 *const dm, date_time dt)
 		}
 		s_seg_buf[i] = digit;
 	}
-	decimalPoint=dm[sizeof(s_seg_buf)]; // 1 after the 7-Seg buffer size
+	decimalPoint=dm[sizeof(s_seg_buf) + (dt.sec&1)]; // 1 after the 7-Seg buffer size
 }
 
 #if 0
@@ -234,7 +234,7 @@ static u8 CurrentDigit=0;
 		s_seg_val = s_seg_buf[CurrentDigit];
 		SevenSegment_DispOneDigit(s_seg_val);
 		
-		if(decimalPoint & (1 << CurrentDigit)){
+		if(decimalPoint & (0x80 >> CurrentDigit)){
 			PORT_7SEG_DP|=0b00100000;//enable the DP as required
 		}
 

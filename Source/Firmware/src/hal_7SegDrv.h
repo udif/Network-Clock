@@ -41,6 +41,7 @@
 
 extern u8 sec;
 extern u8 shadow_b;
+extern date_time dt;
 
 void hal_7SegDrv_SetDispMode(const u8 *const dm, date_time dt);
 //void hal_7SegDrv_ExtractNumToArray(volatile u32 Ctr);

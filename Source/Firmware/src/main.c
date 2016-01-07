@@ -71,7 +71,7 @@ Version:
 void hal_MCU_InitPorts(void);
 ////////////////////////////////////////////
 
-static date_time dt;
+date_time dt;
 unsigned char cmd_buf[250];
 u8 cmd_ptr;
 
@@ -114,25 +114,25 @@ void process_date_time(void)
 // Last entry contains the value of all the dots in each 7-Seg
 //
 const u8 dm_hh_mm[] = {
-	SSEG_BLANK,
 	SSEG_H_HOUR,
 	SSEG_L_HOUR,
 	SSEG_H_MIN,
 	SSEG_L_MIN,
 	SSEG_BLANK,
 	SSEG_BLANK,
-	0x10 // One dot separating HH.MM
+	SSEG_BLANK,
+	0x40, 0x00 // One dot separating HH.MM
 };
 
 const u8 dm_hh_mm_ss[] = {
-	SSEG_BLANK,
 	SSEG_H_HOUR,
 	SSEG_L_HOUR,
 	SSEG_H_MIN,
 	SSEG_L_MIN,
 	SSEG_H_SEC,
 	SSEG_L_SEC,
-	0x14 // Two dots to separate HH.MM.SS
+	SSEG_BLANK,
+	0x50, 0x50 // Two dots to separate HH.MM.SS
 };
 
 const u8 dm_udifink[] = {
@@ -143,12 +143,12 @@ const u8 dm_udifink[] = {
 	SSEG_BLANK,
 	SSEG_BLANK,
 	SSEG_BLANK,
-	0x00
+	0x00,0x00
 };
 
 void main(void)
 {
-	static u8 last_sec;
+	static u8 last_sec, disp_mode = 0;
 	char c;
 
 	//INIT PIC
@@ -177,7 +177,12 @@ void main(void)
 		if (sec != last_sec) {
 			shadow_b = sec&1;
 			increment_date_time(&dt);
-			hal_7SegDrv_SetDispMode(&dm_hh_mm_ss, dt);
+			if (S1_BUTTON==S1_PRESSED)
+				disp_mode ^= 0x01;
+			if (disp_mode)
+				hal_7SegDrv_SetDispMode(&dm_hh_mm, dt);
+			else
+				hal_7SegDrv_SetDispMode(&dm_hh_mm_ss, dt);
 			last_sec = sec;
 			//dt.hour = '0';
 		}
